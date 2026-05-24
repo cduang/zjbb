@@ -1,0 +1,38 @@
+name: Package APKs to ZIP
+
+on:
+  push:
+    branches:
+      - main # 或者你的默认分支名称
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create ZIP archive
+        run: |
+          # 打包指定的三个文件
+          zip -j output.zip AutoJS.fake.latest.apk KernelSU_v1.0.1.apk MT2.26.4.apk
+          
+          # 确保文件在根目录（如果是直接打包，默认就在根目录）
+          echo "Package created: output.zip"
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add output.zip
+          
+          # 检查是否有改动，防止没有文件更新时报错
+          if ! git diff-index --quiet HEAD --; then
+            git commit -m "Auto-package: update apks zip"
+            git push
+          else
+            echo "No changes to commit."
+          fi
